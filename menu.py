@@ -134,7 +134,7 @@ class Menu:
         for i, state_name in enumerate(states_names, start=1):
             print(f'{i}) {state_name}')
         i = select('new graph format')
-        graph.set_state(Graph.State.get_by_name(states_names[i]))
+        graph.set_state(Graph.State.get_by_name(states_names[i - 1]))
 
     @staticmethod
     def rename_graph(graph):
