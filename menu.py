@@ -48,19 +48,32 @@ class Menu:
 
     def run(self):
         while True:
-            items_and_functions = [('new graph', Menu.new_graph)]
-            if len(self.graphs) != 0:
-                items_and_functions.insert(0, ('existing graphs', Menu.existing_graphs))
+            items_and_functions = [('new graph', Menu.new_graph)] if len(self.graphs) == 0 else [
+                ('new graph', Menu.new_graph),
+                ('existing graphs', Menu.existing_graphs),
+                ('addition of graph', Menu.addition_graph),
+                ('union of graphs', Menu.union_graphs),
+                ('connection of graphs', Menu.connection_graphs)
+            ]
             clear_screen()
-            print('  \b\b  \b\b', end='')
             for i, item in enumerate(items_and_functions, start=1):
-                print(f'{i}) {item[0]}')
+                print(f'{str(i).rjust(len(str(len(items_and_functions))))}) {item[0]}')
             print('0) exit')
             i = select_item()
             clear_screen()
             if i == 0:
                 return
             items_and_functions[i - 1][1](self)
+
+    def new_graph(self):
+        clear_screen()
+        filename = input('Enter filename with graph: ')
+        states_names = Graph.State.get_names()
+        print('Graph states:')
+        for i, state_name in enumerate(states_names, start=1):
+            print(f'{i}) {state_name}')
+        i = int(input('Select graph input format: ')) - 1
+        self.graphs.append(Graph(read_list2(filename), Graph.State.get_by_name(states_names[i])))
 
     def existing_graphs(self):
         while True:
@@ -78,6 +91,7 @@ class Menu:
         while True:
             items = [
                 ('print_info', Menu.print_graph_info),
+                ('set_state', Menu.set_graph_state),
                 ('rename', Menu.rename_graph),
                 ('identify vertices', Menu.identify_vertices),
                 ('add vertex', Menu.add_vertex),
@@ -86,19 +100,20 @@ class Menu:
                 ('add edge', Menu.add_edge),
                 ('remove edge', Menu.remove_edge),
                 ('save to file', Menu.save_to_file),
-                ('remove graph', Menu.remove_graph)
+                ('remove graph', Menu.remove_graph_by_index)
             ]
             clear_screen()
             for i, item in enumerate(items, start=1):
-                print(f'{i}) {item[0]}')
+                print(f'{str(i).rjust(len(str(len(items))))}) {item[0]}')
             print('0) back')
             i = select_item()
+            clear_screen()
             if i == 0:
                 return
-            clear_screen()
-            items[i - 1][1](self.graphs[graph_i])
-            if items[i - 1][1] == Menu.remove_graph:
+            elif items[i - 1][1] == Menu.remove_graph_by_index:
+                Menu.remove_graph_by_index(self, graph_i)
                 return
+            items[i - 1][1](self.graphs[graph_i])
 
     @staticmethod
     def print_graph_info(graph):
@@ -109,6 +124,17 @@ class Menu:
         print(f'Edges number: {len(graph.edges())}')
         print()
         press_enter_for_continue()
+
+    @staticmethod
+    def set_graph_state(graph):
+        print(f"Graph: '{graph.name}'")
+        print(f'Old graph format: {Graph.State.to_name(graph.state)}')
+        print('Graph formats:')
+        states_names = Graph.State.get_names()
+        for i, state_name in enumerate(states_names, start=1):
+            print(f'{i}) {state_name}')
+        i = select('new graph format')
+        graph.set_state(Graph.State.get_by_name(states_names[i]))
 
     @staticmethod
     def rename_graph(graph):
@@ -168,6 +194,14 @@ class Menu:
         i = select('edge number for removing')
         graph.remove_edge(i - 1)
 
+    @staticmethod
+    def save_to_file(graph):
+        filename = input(f"Enter filename for saving graph '{graph.name}': ")
+        write_list2(filename, graph.list2)
+
+    def remove_graph_by_index(self, graph_i):
+        del self.graphs[graph_i]
+
     def addition_graph(self):
         graphs = self.graphs
         print('Graphs:')
@@ -199,27 +233,3 @@ class Menu:
         i = select('first graph for connection')
         j = select('second graph for connection')
         graphs.append(graphs[i - 1].union(graphs[j - 1]))
-
-    def save_to_file(self, graph_id):
-        clear_screen()
-        filename = input(f'Enter filename for saving graph_{graph_id + 1}: ')
-        print('Graph states:')
-        states_names = Graph.State.get_names()
-        for i, state_name in enumerate(states_names, start=1):
-            print(f'{i}) {state_name}')
-        i = int(input('Select graph output format: ')) - 1
-        self.graphs[graph_id].set_state(Graph.State.get_by_name(states_names[i]))
-        write_list2(filename, self.graphs[graph_id].list2)
-
-    def remove_graph(self, graph_id):
-        del self.graphs[graph_id]
-
-    def new_graph(self):
-        clear_screen()
-        filename = input('Enter filename with graph: ')
-        states_names = Graph.State.get_names()
-        print('Graph states:')
-        for i, state_name in enumerate(states_names, start=1):
-            print(f'{i}) {state_name}')
-        i = int(input('Select graph input format: ')) - 1
-        self.graphs.append(Graph(read_list2(filename), Graph.State.get_by_name(states_names[i])))
