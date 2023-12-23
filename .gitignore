@@ -1,4 +1,6 @@
+.idea
 venv
 __pycache__
-.idea
 graphs.bin
+classes_OperatorsRepresentationAndOperationsOnGraphs.png
+packages_OperatorsRepresentationAndOperationsOnGraphs.png

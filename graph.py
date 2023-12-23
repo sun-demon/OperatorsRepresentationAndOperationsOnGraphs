@@ -2,31 +2,24 @@ import copy
 from enum import Enum
 
 
-def adjacency_list_to_wrapper_str(adjacency_list):
+def adjacency_list_to_wrapper_str(adjacency_list: list) -> str:
     data = [[f'v_{i + 1}'] for i in range(len(adjacency_list))]
     columns_sizes = [0] * (len(data) + 1)
     for i in range(len(data)):
-        columns_sizes[0] = max(columns_sizes[0], len(data[0]))
-        for j in adjacency_list[i]:
-            columns_sizes[1 + j] = max(columns_sizes[1 + j], len(data[i][j]))
+        columns_sizes[0] = max(columns_sizes[0], len(data[i][0]))
+        for k, j in enumerate(adjacency_list[i], start=1):
             data[i].append(f'v_{j + 1}')
+            columns_sizes[k] = max(columns_sizes[k], len(data[i][-1]))
     result = ''
     for i, row in enumerate(data):
-        result += ' '.join([element.ljust(columns_sizes[j]) for j, element in enumerate(row)])
+        result += f'{row[0].ljust(columns_sizes[0])}: '
+        result += ' '.join([element.ljust(columns_sizes[j]) for j, element in enumerate(row[1:], start=1)])
         if i != len(data) - 1:
             result += '\r\n'
     return result
 
 
-def matrix_to_wrapper_str(matrix, rows_infix, columns_infix):
-    data = [[' '] * (len(matrix[0]) + 1) for _ in range(len(matrix) + 1)]
-    for j in range(1, len(matrix[0]) + 1):
-        data[0][j] = f'{columns_infix}_{j}'
-    for i in range(1, len(matrix) + 1):
-        data[i][0] = f'{rows_infix}_{i}'
-    for i in range(len(matrix)):
-        for j in range(len(matrix[0])):
-            data[i + 1][j + 1] = str(matrix[i][j])
+def str_data_matrix_to_str(data: list) -> str:
     columns_sizes = [max([len(data[i][j]) for i in range(len(data))]) for j in range(len(data[0]))]
     result = ''
     for i, row in enumerate(data):
@@ -37,15 +30,27 @@ def matrix_to_wrapper_str(matrix, rows_infix, columns_infix):
     return result
 
 
-def adjacency_matrix_to_wrapper_str(adjacency_matrix):
+def matrix_to_wrapper_str(matrix: list, rows_infix: str, columns_infix: str) -> str:
+    data = [[' '] * (len(matrix[0]) + 1) for _ in range(len(matrix) + 1)]
+    for j in range(1, len(matrix[0]) + 1):
+        data[0][j] = f'{columns_infix}_{j}'
+    for i in range(1, len(matrix) + 1):
+        data[i][0] = f'{rows_infix}_{i}'
+    for i in range(len(matrix)):
+        for j in range(len(matrix[0])):
+            data[i + 1][j + 1] = str(matrix[i][j])
+    return str_data_matrix_to_str(data)
+
+
+def adjacency_matrix_to_wrapper_str(adjacency_matrix: list) -> str:
     return matrix_to_wrapper_str(adjacency_matrix, 'v', 'v')
 
 
-def incidence_matrix_to_wrapper_str(incidence_matrix):
-    return matrix_to_wrapper_str(incidence_matrix, 'v', 'a')
+def incidence_matrix_to_wrapper_str(incidence_matrix: list) -> str:
+    return matrix_to_wrapper_str(incidence_matrix, 'v', 'e')
 
 
-def adjacency_list_to_adjacency_matrix(adjacency_list):
+def adjacency_list_to_adjacency_matrix(adjacency_list: list) -> list:
     result = [[0] * len(adjacency_list) for _ in range(len(adjacency_list))]
     for u, adjacency in enumerate(adjacency_list, start=0):
         for v in adjacency:
@@ -53,11 +58,11 @@ def adjacency_list_to_adjacency_matrix(adjacency_list):
     return result
 
 
-def adjacency_list_to_incidence_matrix(adjacency_list):
+def adjacency_list_to_incidence_matrix(adjacency_list: list) -> list:
     return adjacency_matrix_to_incidence_matrix(adjacency_list_to_adjacency_matrix(adjacency_list))
 
 
-def adjacency_matrix_to_adjacency_list(adjacency_matrix):
+def adjacency_matrix_to_adjacency_list(adjacency_matrix: list) -> list:
     result = [[] for _ in range(len(adjacency_matrix))]
     for u in range(len(adjacency_matrix)):
         for v in range(len(adjacency_matrix)):
@@ -66,7 +71,7 @@ def adjacency_matrix_to_adjacency_list(adjacency_matrix):
     return result
 
 
-def adjacency_matrix_to_incidence_matrix(adjacency_matrix):
+def adjacency_matrix_to_incidence_matrix(adjacency_matrix: list) -> list:
     result = [[] for _ in range(len(adjacency_matrix))]
     for u in range(len(adjacency_matrix)):
         for v in range(len(adjacency_matrix)):
@@ -84,11 +89,11 @@ def adjacency_matrix_to_incidence_matrix(adjacency_matrix):
     return result
 
 
-def incidence_matrix_to_adjacency_list(incidence_matrix):
+def incidence_matrix_to_adjacency_list(incidence_matrix: list) -> list:
     return adjacency_matrix_to_adjacency_list(incidence_matrix_to_adjacency_matrix(incidence_matrix))
 
 
-def incidence_matrix_to_adjacency_matrix(incidence_matrix):
+def incidence_matrix_to_adjacency_matrix(incidence_matrix: list) -> list:
     result = [[0] * len(incidence_matrix) for _ in range(len(incidence_matrix))]
     for k_edge in range(len(incidence_matrix[0])):
         non_zeros = [(i, degree) for i in range(len(incidence_matrix)) if (degree := incidence_matrix[i][k_edge]) != 0]
@@ -111,7 +116,7 @@ class Graph:
         INCIDENCE_MATRIX = 3
 
         @staticmethod
-        def get_names():
+        def get_names() -> list:
             return ['adjacent list', 'adjacent matrix', 'incidence matrix']
 
         @staticmethod
@@ -124,7 +129,7 @@ class Graph:
             return name_to_state[name]
 
         @staticmethod
-        def to_name(state):
+        def to_name(state) -> str:
             state_to_name = {
                 Graph.State.ADJACENCY_LIST: 'adjacent list',
                 Graph.State.ADJACENCY_MATRIX: 'adjacent matrix',
@@ -146,6 +151,15 @@ class Graph:
         }
         return title + state_to_wrapper_str[self.state](self.list2)
 
+    def edges_number(self) -> int:
+        state = self.state
+        self.set_state(Graph.State.INCIDENCE_MATRIX)
+        result = 0
+        if len(self.list2) != 0:
+            result = len(self.list2[0])
+        self.set_state(state)
+        return result
+
     @staticmethod
     def addition(graph):
         new_graph = copy.deepcopy(graph)
@@ -165,9 +179,10 @@ class Graph:
         new_graph.set_state(Graph.State.INCIDENCE_MATRIX)
         other.set_state(Graph.State.INCIDENCE_MATRIX)
         n1, n2 = len(self.vertices()), len(other.vertices())
-        n_e1, n_e2 = len(self.edges()), len(other.edges())
+        n_e1, n_e2 = self.edges_number(), other.edges_number()
         for i in range(n1):
-            new_graph.list2[i].append([0] * n_e2)
+            for j in range(n_e2):
+                new_graph.list2[i].append(0)
         for i in range(n2):
             new_graph.list2.append([0] * (n_e1 + n_e2))
         for i in range(n2):
@@ -181,7 +196,7 @@ class Graph:
     def connection(self, other):
         new_graph = self.union(other)
         n1, n2 = len(self.vertices()), len(other.vertices())
-        n_e1, n_e2 = len(self.edges()), len(other.edges())
+        n_e1, n_e2 = self.edges_number(), other.edges_number()
         for i in range(n1):
             for j in range(n_e2):
                 new_graph.list2[i][j + n_e1] = 1
@@ -191,7 +206,7 @@ class Graph:
         new_graph.set_name(f'{self.name}_connection_{other.name}')
         return new_graph
 
-    def set_state(self, state: State):
+    def set_state(self, state: State) -> None:
         if self.state == state:
             return
         list2_changers = {
@@ -212,20 +227,20 @@ class Graph:
         self.list2 = list2_changer(self.list2)
         self.state = state
 
-    def set_name(self, name: str):
+    def set_name(self, name: str) -> None:
         self.name = 'unnamed' if str == '' else name
 
-    def vertices(self):
+    def vertices(self) -> list:
         return list(range(len(self.list2)))
 
-    def edges(self):
+    def directed_edges(self) -> list:
         state = self.state
         self.set_state(Graph.State.ADJACENCY_LIST)
         result = [(u, v) for u, adjacency in enumerate(self.list2) for v in adjacency]
         self.set_state(state)
         return result
 
-    def identify_vertices(self, i, j):
+    def identify_vertices(self, i, j) -> None:
         if i == j:
             return
         state = self.state
@@ -250,13 +265,13 @@ class Graph:
         del self.list2[j]
         self.set_state(state)
 
-    def add_vertex(self, v):
+    def add_vertex(self, v: int) -> None:
         state = self.state
         self.set_state(Graph.State.INCIDENCE_MATRIX)
         self.list2.insert(v, [0] * len(self.list2[0]))
         self.set_state(state)
 
-    def remove_vertex(self, v):
+    def remove_vertex(self, v: int) -> None:
         state = self.state
         self.set_state(Graph.State.ADJACENCY_MATRIX)
         for i in range(len(self.list2)):
@@ -266,26 +281,24 @@ class Graph:
         del self.list2[v]
         self.set_state(state)
 
-    def pull_of_edge(self, e_i):
-        state = self.state
-        self.set_state(Graph.State.INCIDENCE_MATRIX)
-        for i in range(len(self.list2)):
-            del self.list2[i][e_i]
-        self.set_state(state)
+    def pull_of_edge(self, e: tuple) -> None:
+        i, j = e
+        self.identify_vertices(i, j)
 
-    def add_edge(self, e):
+    def add_directed_edge(self, e: tuple) -> None:
         state = self.state
         self.set_state(Graph.State.ADJACENCY_MATRIX)
         i, j = e
         if i == j:
-            self.list2[i][j] = min(2, self.list2[i][j] + 1)
+            self.list2[i][i] = min(2, self.list2[i][i] + 1)
         elif self.list2[i][j] == 0:
             self.list2[i][j] = 1
         self.set_state(state)
 
-    def remove_edge(self, e_i):
+    def remove_directed_edge(self, e: tuple) -> None:
         state = self.state
-        self.set_state(Graph.State.INCIDENCE_MATRIX)
-        for i in range(len(self.list2)):
-            del self.list2[i][e_i]
+        self.set_state(Graph.State.ADJACENCY_MATRIX)
+        i, j = e
+        if self.list2[i][j] in [1, 2]:
+            self.list2[i][j] -= 1
         self.set_state(state)
